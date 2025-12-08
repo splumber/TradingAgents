@@ -20,6 +20,13 @@ config["data_vendors"] = {
     "news_data": "alpha_vantage",            # Options: openai, alpha_vantage, google, local
 }
 
+# Optional: Use local LLMs via Ollama (see docs/LOCAL_LLM_SETUP.md)
+# Uncomment the lines below to use local models:
+# config["llm_provider"] = "ollama"
+# config["backend_url"] = "http://localhost:11434/v1"
+# config["quick_think_llm"] = "llama3.2"
+# config["deep_think_llm"] = "llama3.1"
+
 # Initialize with custom config
 ta = TradingAgentsGraph(debug=True, config=config)
 

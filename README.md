@@ -139,7 +139,9 @@ TradingAgents supports **local LLM models via Ollama**, allowing you to run the 
 2. Pull models: `ollama pull llama3.2 && ollama pull llama3.1 && ollama pull nomic-embed-text`
 3. Run CLI and select "Ollama" as provider
 
-For detailed setup instructions, hardware requirements, and troubleshooting, see: **[Local LLM Setup Guide](docs/LOCAL_LLM_SETUP.md)**
+**Resources:**
+- **[Local LLM Setup Guide](docs/LOCAL_LLM_SETUP.md)** - Detailed setup instructions, hardware requirements, and troubleshooting
+- **[Example Script](examples/local_llm_example.py)** - Complete working example with local LLMs
 
 ### CLI Usage
 

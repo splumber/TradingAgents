@@ -12,6 +12,13 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langgraph.prebuilt import ToolNode
 
+# Import requests for Ollama validation (optional dependency)
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
 from tradingagents.agents import *
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.agents.utils.memory import FinancialSituationMemory
@@ -72,17 +79,58 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
-        if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
+        provider = self.config["llm_provider"].lower()
+        
+        if provider in ["openai", "ollama", "openrouter"]:
+            # For Ollama, provide helpful error message if models aren't available
+            if provider == "ollama" and REQUESTS_AVAILABLE:
+                try:
+                    # Check if Ollama is running
+                    ollama_base = self.config["backend_url"].replace("/v1", "")
+                    response = requests.get(f"{ollama_base}/api/tags", timeout=2)
+                    if response.status_code == 200:
+                        available_models = [m["name"] for m in response.json().get("models", [])]
+                        required_models = [self.config["deep_think_llm"], self.config["quick_think_llm"]]
+                        
+                        # Check for missing models with flexible matching (handles version tags like :8b)
+                        def is_model_available(model_name, available_list):
+                            # Exact match
+                            if model_name in available_list:
+                                return True
+                            # Base name match (e.g., "llama3.1" matches "llama3.1:8b")
+                            base_name = model_name.split(':')[0]
+                            for available in available_list:
+                                if available.startswith(base_name):
+                                    return True
+                            return False
+                        
+                        missing_models = [m for m in required_models if not is_model_available(m, available_models)]
+                        if missing_models:
+                            print(f"Warning: The following models may not be available in Ollama: {missing_models}")
+                            print(f"Available models: {available_models}")
+                            print(f"To pull missing models, run: ollama pull {' && ollama pull '.join(missing_models)}")
+                except requests.exceptions.RequestException as e:
+                    print(f"Warning: Could not connect to Ollama at {self.config['backend_url']}")
+                    print("Make sure Ollama is running: ollama serve")
+                    print(f"Connection error: {e}")
+                except Exception as e:
+                    print(f"Warning: Could not verify Ollama setup")
+                    print(f"Error: {e}")
+            
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "anthropic":
+        elif provider == "anthropic":
             self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "google":
+        elif provider == "google":
             self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
             self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
         else:
-            raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
+            raise ValueError(
+                f"Unsupported LLM provider: {self.config['llm_provider']}. "
+                f"Supported providers: openai, anthropic, google, openrouter, ollama. "
+                f"For local LLMs, see docs/LOCAL_LLM_SETUP.md"
+            )
         
         # Initialize memories
         self.bull_memory = FinancialSituationMemory("bull_memory", self.config)

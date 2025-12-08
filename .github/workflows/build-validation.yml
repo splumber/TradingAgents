@@ -13,8 +13,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
@@ -62,8 +60,6 @@ jobs:
 
   build-summary:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     needs: build
     if: always()
     steps:

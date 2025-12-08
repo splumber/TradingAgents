@@ -9,10 +9,20 @@ DEFAULT_CONFIG = {
         "dataflows/data_cache",
     ),
     # LLM settings
+    # Supported providers: openai, anthropic, google, openrouter, ollama
     "llm_provider": "openai",
     "deep_think_llm": "o4-mini",
     "quick_think_llm": "gpt-4o-mini",
     "backend_url": "https://api.openai.com/v1",
+    
+    # Local LLM Configuration (Ollama)
+    # To use local LLMs, set:
+    # "llm_provider": "ollama"
+    # "backend_url": "http://localhost:11434/v1"
+    # "deep_think_llm": "llama3.1"  # or qwen3
+    # "quick_think_llm": "llama3.2"  # or llama3.1
+    # See docs/LOCAL_LLM_SETUP.md for detailed setup instructions
+    
     # Debate and discussion settings
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,

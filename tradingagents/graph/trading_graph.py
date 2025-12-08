@@ -72,17 +72,43 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
-        if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
+        provider = self.config["llm_provider"].lower()
+        
+        if provider in ["openai", "ollama", "openrouter"]:
+            # For Ollama, provide helpful error message if models aren't available
+            if provider == "ollama":
+                try:
+                    import requests
+                    # Check if Ollama is running
+                    ollama_base = self.config["backend_url"].replace("/v1", "")
+                    response = requests.get(f"{ollama_base}/api/tags", timeout=2)
+                    if response.status_code == 200:
+                        available_models = [m["name"] for m in response.json().get("models", [])]
+                        required_models = [self.config["deep_think_llm"], self.config["quick_think_llm"]]
+                        missing_models = [m for m in required_models if m not in available_models]
+                        if missing_models:
+                            print(f"Warning: The following models are not available in Ollama: {missing_models}")
+                            print(f"Available models: {available_models}")
+                            print(f"To pull missing models, run: ollama pull {' && ollama pull '.join(missing_models)}")
+                except Exception as e:
+                    print(f"Warning: Could not verify Ollama connection at {self.config['backend_url']}")
+                    print("Make sure Ollama is running: ollama serve")
+                    print(f"Error details: {e}")
+            
             self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "anthropic":
+        elif provider == "anthropic":
             self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
             self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
-        elif self.config["llm_provider"].lower() == "google":
+        elif provider == "google":
             self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
             self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
         else:
-            raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
+            raise ValueError(
+                f"Unsupported LLM provider: {self.config['llm_provider']}. "
+                f"Supported providers: openai, anthropic, google, openrouter, ollama. "
+                f"For local LLMs, see docs/LOCAL_LLM_SETUP.md"
+            )
         
         # Initialize memories
         self.bull_memory = FinancialSituationMemory("bull_memory", self.config)

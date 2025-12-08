@@ -129,6 +129,18 @@ cp .env.example .env
 
 **Note:** We are happy to partner with Alpha Vantage to provide robust API support for TradingAgents. You can get a free AlphaVantage API [here](https://www.alphavantage.co/support/#api-key), TradingAgents-sourced requests also have increased rate limits to 60 requests per minute with no daily limits. Typically the quota is sufficient for performing complex tasks with TradingAgents thanks to Alpha Vantage’s open-source support program. If you prefer to use OpenAI for these data sources instead, you can modify the data vendor settings in `tradingagents/default_config.py`.
 
+
+### Using Local LLMs (No API Costs)
+
+TradingAgents supports **local LLM models via Ollama**, allowing you to run the entire framework without cloud API costs!
+
+**Quick Setup:**
+1. Install [Ollama](https://ollama.ai)
+2. Pull models: `ollama pull llama3.2 && ollama pull llama3.1 && ollama pull nomic-embed-text`
+3. Run CLI and select "Ollama" as provider
+
+For detailed setup instructions, hardware requirements, and troubleshooting, see: **[Local LLM Setup Guide](docs/LOCAL_LLM_SETUP.md)**
+
 ### CLI Usage
 
 You can also try out the CLI directly by running:

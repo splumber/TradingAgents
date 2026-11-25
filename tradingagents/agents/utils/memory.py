@@ -5,7 +5,8 @@ from openai import OpenAI
 
 class FinancialSituationMemory:
     def __init__(self, name, config):
-        if config["backend_url"] == "http://localhost:11434/v1":
+        # Ollama serves nomic-embed-text under any host alias; key off provider, not URL.
+        if config.get("llm_provider") == "ollama":
             self.embedding = "nomic-embed-text"
         else:
             self.embedding = "text-embedding-3-small"
